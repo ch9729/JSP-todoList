@@ -1,7 +1,6 @@
 package webapp.login;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -9,24 +8,36 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-//localhost:8080 뒤의 url 주소
-@WebServlet("/login.do")
-public class LoginServlet extends HttpServlet{
+import webapp.todo.TodoService;
 
-	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		req.setAttribute("name", req.getParameter("name"));	//name으로 넘어오는 파라미터를 key name으로 넘긴다.
-		req.setAttribute("password", req.getParameter("password"));
-		req.getRequestDispatcher("WEB-INF/views/login.jsp").forward(req, resp);
+@WebServlet(urlPatterns = "/login.do")
+public class LoginServlet extends HttpServlet {
+
+	private LoginService userValidationService = new LoginService();
+	private TodoService todoService = new TodoService();
+
+	protected void doGet(HttpServletRequest request,
+			HttpServletResponse response) throws ServletException, IOException {
+		request.setAttribute("name", request.getParameter("name"));
+		request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(
+				request, response);
 	}
 
-	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		req.setAttribute("name", req.getParameter("name"));
-		req.setAttribute("password", req.getParameter("password"));
-		req.getRequestDispatcher("WEB-INF/views/welcome.jsp").forward(req, resp);
+	protected void doPost(HttpServletRequest request,
+			HttpServletResponse response) throws ServletException, IOException {
+		String name = request.getParameter("name");
+		String password = request.getParameter("password");
+
+		boolean isUserValid = userValidationService.isUserValid(name, password);
+
+		if (isUserValid) {
+			request.getSession().setAttribute("name", name);
+			response.sendRedirect("/todoList/list-todos.do");
+		} else {
+			request.setAttribute("errorMessage", "Invalid Credentials!");
+			request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(
+					request, response);
+		}
 	}
-	
-	
-	
+
 }
